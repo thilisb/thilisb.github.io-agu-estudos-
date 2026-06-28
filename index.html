@@ -194,6 +194,31 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:1
 .multisub-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(90,169,214,.15);border:1px solid rgba(90,169,214,.35);border-radius:99px;font-size:.6rem;color:var(--accent);padding:3px 8px;max-width:100%;word-break:break-word;}
 .multisub-tag .rm{cursor:pointer;font-size:.75rem;flex-shrink:0;opacity:.7;}
 .multisub-tag .rm:hover{opacity:1;}
+
+/* ── Probabilidade 2ª Fase ── */
+.prob-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:560px){.prob-2col{grid-template-columns:1fr;}}
+.prob-gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;}
+.prob-gauge-svg{width:190px;height:105px;}
+.prob-gauge-val{font-family:var(--serif);font-size:2.4rem;font-weight:700;text-anchor:middle;dominant-baseline:middle;}
+.prob-gauge-lbl{font-family:var(--mono);font-size:.56rem;fill:var(--muted);text-anchor:middle;}
+.prob-disc-table{width:100%;border-collapse:collapse;font-size:.67rem;}
+.prob-disc-table th{color:var(--muted);font-weight:500;text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);font-size:.58rem;text-transform:uppercase;letter-spacing:.07em;}
+.prob-disc-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.prob-disc-table tr:last-child td{border-bottom:none;}
+.prob-disc-table tr:hover td{background:var(--surface2);}
+.alavanca-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;transition:border-color .2s;}
+.alavanca-item:hover{border-color:var(--border2);}
+.alavanca-nome{font-size:.73rem;font-weight:500;flex:1;}
+.alavanca-gain{font-size:.75rem;font-weight:700;color:var(--success);white-space:nowrap;}
+.alavanca-bar-wrap{width:70px;flex-shrink:0;}
+.prob-aviso{font-size:.62rem;color:var(--muted);text-align:center;padding:12px;border-top:1px solid var(--border);margin-top:6px;line-height:1.7;}
+.tag-critico{background:var(--danger-bg);color:var(--danger);font-size:.54rem;padding:2px 6px;border-radius:99px;margin-left:5px;font-weight:600;}
+.tag-atencao{background:var(--warn-bg);color:var(--warn);font-size:.54rem;padding:2px 6px;border-radius:99px;margin-left:5px;font-weight:600;}
+.grupo-corte{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.corte-badge{flex:1;min-width:80px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;text-align:center;font-size:.65rem;}
+.corte-badge-val{font-family:var(--serif);font-size:1.2rem;font-weight:700;line-height:1.1;}
+.corte-badge-lbl{color:var(--muted);font-size:.55rem;margin-top:2px;}
 </style>
 </head>
 <body>
@@ -235,6 +260,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:1
   <button class="tab-nav" onclick="showPage('progresso',this)"><span class="tab-icon">📚</span>Progresso</button>
   <button class="tab-nav" onclick="showPage('revisoes',this)"><span class="tab-icon">🔁</span>Revisões</button>
   <button class="tab-nav" onclick="showPage('historico',this)"><span class="tab-icon">📋</span>Histórico</button>
+  <button class="tab-nav" onclick="showPage('probabilidade',this)"><span class="tab-icon">📈</span>2ª Fase</button>
 </nav>
 
 <div class="page active" id="page-dashboard">
@@ -374,6 +400,53 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:1
 </div>
 
 </div>
+
+<div class="page" id="page-probabilidade">
+  <div class="subordinate-banner"><span class="ic">📈</span><div>Estimativa de probabilidade de <strong>passar para a 2ª fase</strong> (prova discursiva) com base no seu % de acerto atual por disciplina. Considera os cortes do edital AGU 2022 (Cebraspe): ≥50% em cada grupo + classificação geral. Margem de incerteza: ±15 p.p. — use como bússola, não previsão.</div></div>
+  <div class="prob-2col">
+    <div class="card">
+      <div class="card-title">📍 Situação Atual</div>
+      <div class="prob-gauge-wrap">
+        <svg class="prob-gauge-svg" viewBox="0 0 200 110">
+          <path d="M20,100 A80,80 0 0,1 180,100" stroke="var(--border)" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <path id="gauge-atual-arc" d="M20,100 A80,80 0 0,1 180,100" stroke="var(--danger)" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="0 251.2"/>
+          <text id="gauge-atual-val" class="prob-gauge-val" x="100" y="90" fill="var(--accent)">—</text>
+          <text class="prob-gauge-lbl" x="100" y="108">prob. 2ª fase hoje</text>
+        </svg>
+      </div>
+      <div class="grupo-corte" id="cortes-atuais"></div>
+      <div class="prob-diag" id="diag-atual" style="font-size:.7rem;color:var(--text2);line-height:1.7;padding:8px 0">Calculando...</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎯 Projeção ao Fim do Estudo</div>
+      <div class="prob-gauge-wrap">
+        <svg class="prob-gauge-svg" viewBox="0 0 200 110">
+          <path d="M20,100 A80,80 0 0,1 180,100" stroke="var(--border)" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <path id="gauge-proj-arc" d="M20,100 A80,80 0 0,1 180,100" stroke="var(--accent)" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="0 251.2"/>
+          <text id="gauge-proj-val" class="prob-gauge-val" x="100" y="90" fill="var(--accent)">—</text>
+          <text class="prob-gauge-lbl" x="100" y="108">projeção ao concluir cronograma</text>
+        </svg>
+      </div>
+      <div class="grupo-corte" id="cortes-proj"></div>
+      <div class="prob-diag" id="diag-proj" style="font-size:.7rem;color:var(--text2);line-height:1.7;padding:8px 0">Calculando...</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📊 Acerto por Disciplina — Atual vs. Projetado</div>
+    <div style="overflow-x:auto">
+      <table class="prob-disc-table" id="prob-disc-table">
+        <thead><tr><th>Disciplina</th><th>Grupo</th><th>Hoje</th><th>Projetado</th><th>Teto</th><th>Questões</th></tr></thead>
+        <tbody id="prob-disc-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🚀 Maiores Alavancas — onde focar para subir a probabilidade</div>
+    <div id="prob-alavancas"></div>
+    <div class="prob-aviso">⚠️ Modelo baseado no edital AGU 2022 (Advogado da União, banca Cebraspe). Parâmetros podem mudar no próximo edital. Incerteza estimada: ±15 p.p. Questões de estudo ≠ questões de prova — acertos em exercícios tendem a superestimar o desempenho real.</div>
+  </div>
+</div>
+
 
 <div class="modal-overlay" id="modalRegras" onclick="if(event.target===this)fecharRegras()">
   <div class="modal-box">
@@ -1504,14 +1577,337 @@ function renderHistorico(filtro){
     return '<div class="hist-item'+(s.rev?' is-rev':'')+'"><div class="hist-top"><span class="hist-disc">'+s.disc+'</span><div style="display:flex;align-items:center;gap:6px">'+revBadge+'<span class="hist-date">'+fmtD(s.data)+'</span><button class="btn btn-sm btn-danger" onclick="deletarSessao('+s.id+')">✕</button></div></div><div class="hist-sub">'+s.sub+'</div><div class="hist-nums">'+bancaBadge+'<span>'+s.aulas+'aul</span>'+(s.paginas?'<span>'+s.paginas+'págs</span>':'')+'<span>'+s.q+'q</span>'+(pct!==null?'<span class="'+cls+'">'+pct+'% ('+s.ac+'/'+s.q+')</span>':'')+(s.obs?'<span style="color:var(--muted)">📝 '+s.obs+'</span>':'')+'</div></div>';
   }).join('');
 }
-function render(){ renderStats(); renderDash(); renderProgresso(); renderRevisoes(); renderHistorico(histFiltro); }
+function render(){ renderStats(); renderDash(); renderProgresso(); renderRevisoes(); renderHistorico(histFiltro); if(window.renderProbabilidade) window.renderProbabilidade(); }
 window.showPage=function(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-nav').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
   render();
+  if(id==='probabilidade'&&window.renderProbabilidade) window.renderProbabilidade();
 };
+
+/* ══════════════════════════════════════════════════════════════
+   BLOCO: PROBABILIDADE DE PASSAR PARA A 2ª FASE — AGU
+   ──────────────────────────────────────────────────────────────
+   Lógica do concurso (edital AGU 2022, Cebraspe):
+   • Prova Objetiva: 100 questões divididas em 3 grupos
+     - Grupo I  (46 q): Direito Constitucional, Administrativo,
+                         Tributário, Financeiro/Econômico, Ambiental,
+                         Legislação AGU
+     - Grupo II (34 q): Internacional, Civil, Proc. Civil, Empresarial
+     - Grupo III(20 q): Trabalho+Proc.Trabalho, Seguridade, Eleitoral,
+                         Penal+Proc.Penal
+   • Corte eliminatório: ≥50% em CADA grupo (não cumulativo)
+   • Aprovação objetiva = superar os 3 cortes + classificação geral
+   • Passar para 2ª fase = ser aprovado na objetiva dentro das vagas
+     (a AGU historicamente convoca grande múltiplo das vagas)
+   ══════════════════════════════════════════════════════════════ */
+
+const AGU_PROB_CONFIG = {
+  /* questões por disciplina no edital 2022 — estimativa proporcional
+     dentro de cada grupo (o edital não detalha por disc, apenas por grupo) */
+  questoesPorDisc: {
+    "Direito Constitucional":              10,
+    "Direito Administrativo":              12,
+    "Direito Tributário":                   8,
+    "Direito Financeiro e Econômico":       8,
+    "Direito Ambiental":                    4,
+    "Legislação da AGU, Gestão de Conflitos e Governança": 4,
+    "Direito Internacional Público e Privado": 10,
+    "Direito Civil":                        10,
+    "Direito Processual Civil":             10,
+    "Direito Empresarial":                   4,
+    "Direito do Trabalho e Direito Processual do Trabalho": 10,
+    "Direito da Seguridade Social":          5,
+    "Direito Eleitoral":                     3,
+    "Direito Penal e Direito Processual Penal": 2
+  },
+  /* grupo conforme o edital */
+  grupoDisc: {
+    "Direito Constitucional":              "I",
+    "Direito Administrativo":              "I",
+    "Direito Tributário":                  "I",
+    "Direito Financeiro e Econômico":      "I",
+    "Direito Ambiental":                   "I",
+    "Legislação da AGU, Gestão de Conflitos e Governança": "I",
+    "Direito Internacional Público e Privado": "II",
+    "Direito Civil":                       "II",
+    "Direito Processual Civil":            "II",
+    "Direito Empresarial":                 "II",
+    "Direito do Trabalho e Direito Processual do Trabalho": "III",
+    "Direito da Seguridade Social":        "III",
+    "Direito Eleitoral":                   "III",
+    "Direito Penal e Direito Processual Penal": "III"
+  },
+  /* teto realista de acerto (Cebraspe — questões sem alternativas, eliminação) */
+  teto: {
+    "Direito Constitucional":              0.78,
+    "Direito Administrativo":              0.76,
+    "Direito Tributário":                  0.72,
+    "Direito Financeiro e Econômico":      0.70,
+    "Direito Ambiental":                   0.74,
+    "Legislação da AGU, Gestão de Conflitos e Governança": 0.75,
+    "Direito Internacional Público e Privado": 0.68,
+    "Direito Civil":                       0.76,
+    "Direito Processual Civil":            0.74,
+    "Direito Empresarial":                 0.70,
+    "Direito do Trabalho e Direito Processual do Trabalho": 0.74,
+    "Direito da Seguridade Social":        0.72,
+    "Direito Eleitoral":                   0.70,
+    "Direito Penal e Direito Processual Penal": 0.68
+  },
+  /* horas estimadas de estudo restantes para projeção (ajustar conforme cronograma) */
+  horasPlanejadas: {
+    "Direito Constitucional":              80,
+    "Direito Administrativo":              100,
+    "Direito Tributário":                  80,
+    "Direito Financeiro e Econômico":      60,
+    "Direito Ambiental":                   40,
+    "Legislação da AGU, Gestão de Conflitos e Governança": 30,
+    "Direito Internacional Público e Privado": 60,
+    "Direito Civil":                       90,
+    "Direito Processual Civil":            80,
+    "Direito Empresarial":                 40,
+    "Direito do Trabalho e Direito Processual do Trabalho": 70,
+    "Direito da Seguridade Social":        40,
+    "Direito Eleitoral":                   30,
+    "Direito Penal e Direito Processual Penal": 30
+  },
+  /* parâmetros de regressão à média (Bayesian shrinkage) */
+  defaultPorGrupo: { "I": 0.30, "II": 0.30, "III": 0.30 },
+  minQSub: 10, /* questões mínimas para confiar no acerto real */
+  k: 0.022,    /* taxa de ganho de acerto com horas de estudo */
+  /* questões totais por grupo (edital) */
+  totalGrupo: { "I": 46, "II": 34, "III": 20 },
+  /* corte mínimo por grupo: 50% (Cebraspe cru — sem desconto de anuladas) */
+  corteGrupo: 0.50,
+  /* parâmetros da distribuição de notas para estimar classificação */
+  /* nota combinada = média ponderada de acertos nos 3 grupos
+     modelo: logístico centrado em 60% de acerto geral ≈ ponto de corte médio */
+  midGeral: 0.60,
+  steepGeral: 18
+};
+
+/* ── helpers ── */
+function aguAcertoSubAjustado(disc, sub, sessoes) {
+  const qSub = sessoes.filter(s => s.disc === disc && s.sub === sub).reduce((a,s) => a + (s.q||0), 0);
+  const acSub = sessoes.filter(s => s.disc === disc && s.sub === sub).reduce((a,s) => a + (s.ac||0), 0);
+  const g = AGU_PROB_CONFIG.grupoDisc[disc] || "I";
+  const def = AGU_PROB_CONFIG.defaultPorGrupo[g];
+  if (qSub === 0) return def;
+  const peso = Math.min(qSub, AGU_PROB_CONFIG.minQSub) / AGU_PROB_CONFIG.minQSub;
+  return peso * (acSub / qSub) + (1 - peso) * def;
+}
+
+function aguAcertoDiscAtual(disc, sessoes) {
+  const subs = DISC[disc] ? DISC[disc].subs : [];
+  if (subs.length === 0) {
+    const g = AGU_PROB_CONFIG.grupoDisc[disc] || "I";
+    return AGU_PROB_CONFIG.defaultPorGrupo[g];
+  }
+  const soma = subs.reduce((a, sub) => a + aguAcertoSubAjustado(disc, sub, sessoes), 0);
+  return soma / subs.length;
+}
+
+function aguAcertoProjetado(disc, baseAtual) {
+  const horas = AGU_PROB_CONFIG.horasPlanejadas[disc] || 0;
+  const teto = AGU_PROB_CONFIG.teto[disc] || 0.75;
+  const k = AGU_PROB_CONFIG.k;
+  const ganho = (teto - baseAtual) * (1 - Math.exp(-k * horas));
+  return Math.min(teto, baseAtual + ganho);
+}
+
+function aguAcertoGrupo(grupo, acPorDisc) {
+  const discs = DNAMES.filter(d => AGU_PROB_CONFIG.grupoDisc[d] === grupo);
+  const totalQ = discs.reduce((a, d) => a + (AGU_PROB_CONFIG.questoesPorDisc[d] || 0), 0);
+  if (totalQ === 0) return 0;
+  return discs.reduce((a, d) => a + (acPorDisc[d] || 0) * (AGU_PROB_CONFIG.questoesPorDisc[d] || 0), 0) / totalQ;
+}
+
+/* Probabilidade de passar para 2ª fase:
+   Combina:
+   1. P(superar os 3 cortes de 50%) — produto das probabilidades logísticas por grupo
+   2. P(estar bem classificado na lista geral) — logístico da nota geral
+   Resultado final = produto ponderado */
+function aguProbPassar2Fase(acPorDisc) {
+  const grupos = ["I", "II", "III"];
+  const corte = AGU_PROB_CONFIG.corteGrupo;
+
+  /* P de superar o corte em cada grupo — logístico com steep calibrado */
+  const pCortes = grupos.map(g => {
+    const ac = aguAcertoGrupo(g, acPorDisc);
+    /* desvio em relação ao corte, normalizado pelo total de questões */
+    const steep = 25; /* controla a "dureza" da curva em torno do 50% */
+    return 1 / (1 + Math.exp(-steep * (ac - corte)));
+  });
+  const pTodosCortes = pCortes.reduce((a, p) => a * p, 1);
+
+  /* Acerto geral ponderado */
+  const totalQ = Object.values(AGU_PROB_CONFIG.questoesPorDisc).reduce((a,v)=>a+v,0);
+  const acGeral = DNAMES.reduce((a, d) => {
+    return a + (acPorDisc[d] || 0) * (AGU_PROB_CONFIG.questoesPorDisc[d] || 0);
+  }, 0) / totalQ;
+
+  /* P de estar classificado na lista geral */
+  const steep2 = AGU_PROB_CONFIG.steepGeral;
+  const mid2 = AGU_PROB_CONFIG.midGeral;
+  const pGeral = 1 / (1 + Math.exp(-steep2 * (acGeral - mid2)));
+
+  /* Combinado: ambas as condições precisam ser satisfeitas */
+  return pTodosCortes * pGeral;
+}
+
+function aguCorGauge(p) {
+  if (p < 0.20) return 'var(--danger)';
+  if (p < 0.40) return 'var(--warn)';
+  if (p < 0.60) return 'var(--accent)';
+  return 'var(--success)';
+}
+
+function aguDiagnostico(p, acPorGrupo, cenario) {
+  const grupos = ["I","II","III"];
+  const corte = AGU_PROB_CONFIG.corteGrupo;
+  const abaixo = grupos.filter(g => acPorGrupo[g] < corte);
+
+  let prefixo = '';
+  if (abaixo.length > 0) {
+    prefixo = '🔴 Grupo(s) '+abaixo.join(', ')+' abaixo do corte de 50% — eliminatório mesmo com nota alta. ';
+  }
+
+  let msg = '';
+  if (cenario === 'atual') {
+    if (p < 0.05) msg = '⚠️ Fase muito inicial. O gap é grande mas esperado — cada disciplina estudada move significativamente.';
+    else if (p < 0.20) msg = '📉 Ainda fora da zona competitiva. Priorize as disciplinas com corte em risco.';
+    else if (p < 0.40) msg = '📊 Progresso real. Continue o método — revisões espaçadas são decisivas aqui.';
+    else if (p < 0.60) msg = '🎯 Zona competitiva. Consistência na execução define o resultado final.';
+    else msg = '✅ Projeção sólida com a bagagem atual. Mantenha o ritmo e não descuide das revisões.';
+  } else {
+    if (p < 0.20) msg = '⚠️ Projeção abaixo do necessário. Reavalie a alocação de horas e o volume de questões por disciplina.';
+    else if (p < 0.40) msg = '📉 Projeção ainda aquém. O cronograma precisa de execução rigorosa e sem lacunas.';
+    else if (p < 0.60) msg = '📊 Chance real ao fim do estudo. Não pule disciplinas — cada uma tem peso no corte.';
+    else if (p < 0.80) msg = '🎯 Projeção forte se o cronograma for executado. Revisão espaçada é o que separa daqui pra frente.';
+    else msg = '✅ Projeção excelente. Atenção à reta final — não subestime as disciplinas que ainda faltam.';
+  }
+  return prefixo + msg;
+}
+
+function aguRenderGauge(arcId, valId, prob) {
+  const circumference = Math.PI * 80;
+  const dash = prob * circumference;
+  const arc = document.getElementById(arcId);
+  const val = document.getElementById(valId);
+  if (!arc || !val) return;
+  arc.setAttribute('stroke-dasharray', dash + ' ' + circumference);
+  arc.setAttribute('stroke', aguCorGauge(prob));
+  val.textContent = Math.round(prob * 100) + '%';
+  val.setAttribute('fill', aguCorGauge(prob));
+}
+
+function aguRenderCortesBadges(containerId, acPorGrupo) {
+  const cont = document.getElementById(containerId);
+  if (!cont) return;
+  const corte = AGU_PROB_CONFIG.corteGrupo;
+  const totalGrupo = AGU_PROB_CONFIG.totalGrupo;
+  cont.innerHTML = ['I','II','III'].map(g => {
+    const ac = acPorGrupo[g];
+    const pct = Math.round(ac * 100);
+    const ok = ac >= corte;
+    const cor = ok ? 'var(--success)' : 'var(--danger)';
+    const ic = ok ? '✓' : '✗';
+    const totalQ = totalGrupo[g];
+    const acQ = Math.round(ac * totalQ);
+    return `<div class="corte-badge" style="border-color:${cor}20">
+      <div class="corte-badge-val" style="color:${cor}">${ic} ${pct}%</div>
+      <div class="corte-badge-lbl">Grupo ${g} (${acQ}/${totalQ}q)<br>corte: 50%</div>
+    </div>`;
+  }).join('');
+}
+
+window.renderProbabilidade = function() {
+  if (!window._d) return;
+  const sessoes = window._d.sessoes || [];
+
+  const acAtual = {}, acProj = {};
+  DNAMES.forEach(disc => {
+    acAtual[disc] = aguAcertoDiscAtual(disc, sessoes);
+    acProj[disc] = aguAcertoProjetado(disc, acAtual[disc]);
+  });
+
+  const acGrupoAtual = {}, acGrupoProj = {};
+  ['I','II','III'].forEach(g => {
+    acGrupoAtual[g] = aguAcertoGrupo(g, acAtual);
+    acGrupoProj[g] = aguAcertoGrupo(g, acProj);
+  });
+
+  const pAtual = aguProbPassar2Fase(acAtual);
+  const pProj  = aguProbPassar2Fase(acProj);
+
+  aguRenderGauge('gauge-atual-arc', 'gauge-atual-val', pAtual);
+  aguRenderGauge('gauge-proj-arc',  'gauge-proj-val',  pProj);
+  aguRenderCortesBadges('cortes-atuais', acGrupoAtual);
+  aguRenderCortesBadges('cortes-proj',   acGrupoProj);
+
+  const dAtual = document.getElementById('diag-atual');
+  const dProj  = document.getElementById('diag-proj');
+  if (dAtual) dAtual.textContent = aguDiagnostico(pAtual, acGrupoAtual, 'atual');
+  if (dProj)  dProj.textContent  = aguDiagnostico(pProj,  acGrupoProj,  'proj');
+
+  /* tabela por disciplina */
+  const tbody = document.getElementById('prob-disc-tbody');
+  if (tbody) {
+    tbody.innerHTML = DNAMES.map(disc => {
+      const qa = Math.round(acAtual[disc] * 100);
+      const qp = Math.round(acProj[disc] * 100);
+      const qt = Math.round((AGU_PROB_CONFIG.teto[disc] || 0.75) * 100);
+      const g  = AGU_PROB_CONFIG.grupoDisc[disc] || '?';
+      const nq = AGU_PROB_CONFIG.questoesPorDisc[disc] || 0;
+      const corte = AGU_PROB_CONFIG.corteGrupo * 100;
+      const corA = qa >= 70 ? 'var(--success)' : qa >= 50 ? 'var(--accent)' : 'var(--danger)';
+      const corP = qp >= 70 ? 'var(--success)' : qp >= 55 ? 'var(--accent)' : 'var(--warn)';
+      const critico = qa < corte ? '<span class="tag-critico">CORTE</span>' : '';
+      const atencao = qa >= corte && qa < 60 ? '<span class="tag-atencao">ATENÇÃO</span>' : '';
+      return '<tr>' +
+        '<td>' + disc + critico + atencao + '</td>' +
+        '<td style="color:var(--muted);font-size:.6rem">G' + g + ' / ' + nq + 'q</td>' +
+        '<td style="color:' + corA + ';font-weight:600">' + qa + '%</td>' +
+        '<td style="color:' + corP + ';font-weight:600">' + qp + '%</td>' +
+        '<td style="color:var(--muted)">' + qt + '%</td>' +
+        '<td style="color:var(--muted);font-size:.6rem">' + (nq * corte / 100).toFixed(0) + '/' + nq + ' mín</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  /* alavancas */
+  const alavEl = document.getElementById('prob-alavancas');
+  if (alavEl) {
+    const ganhos = DNAMES.map(disc => {
+      /* simula o impacto de melhorar essa disc para o projetado */
+      const acSim = Object.assign({}, acAtual, { [disc]: acProj[disc] });
+      const pSim = aguProbPassar2Fase(acSim);
+      const gainPP = Math.round((pSim - pAtual) * 100);
+      const ganhoAc = Math.round((acProj[disc] - acAtual[disc]) * 100);
+      const g = AGU_PROB_CONFIG.grupoDisc[disc] || '?';
+      return { disc, gainPP, ganhoAc, g };
+    }).sort((a, b) => b.gainPP - a.gainPP);
+
+    alavEl.innerHTML = ganhos.slice(0, 6).map((g, i) => {
+      const barW = Math.min(100, Math.round(Math.abs(g.gainPP) * 3));
+      const cor = i === 0 ? 'var(--danger)' : i === 1 ? 'var(--warn)' : 'var(--accent)';
+      return '<div class="alavanca-item">' +
+        '<div>' +
+          '<div class="alavanca-nome">' + (i+1) + '. ' + g.disc + ' <span style="color:var(--muted);font-size:.6rem">(Grupo ' + g.g + ')</span></div>' +
+          '<div style="font-size:.62rem;color:var(--muted);margin-top:2px">Ganho potencial de acerto: +' + g.ganhoAc + 'pp</div>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">' +
+          '<div class="alavanca-gain">+' + g.gainPP + 'pp prob.</div>' +
+          '<div class="alavanca-bar-wrap"><div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden"><div style="height:100%;width:' + barW + '%;background:' + cor + ';border-radius:99px;transition:width .4s"></div></div></div>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+  }
+};
+
 popularTodosSelects();
 render();
 </script>
